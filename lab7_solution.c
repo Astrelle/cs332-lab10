@@ -9,6 +9,7 @@
 #include <sys/wait.h>
 #include <time.h>
 #include <string.h>
+#include <fcntl.h>
 
 void createarray(char *buf, char **array) {
 	int i, count, len;
@@ -59,7 +60,23 @@ int main(int argc, char **argv) {
       time(&t1);
       pid = fork();
       if (pid == 0) { /* this is child process */
+        char stdout_file[25];
+        char stderr_file[25];
+        pid = getpid();
+        sprintf(stdout_file, "%d.out", pid);
+        sprintf(stderr_file, "%d.err", pid);
+        int stdout = open(stdout_file, O_CREAT | O_WRONLY, 0600);
+        int stderr = open(stderr_file, O_CREAT | O_WRONLY, 0600);
+
+        close(1);
+        close(2);
+
+        dup2(stdout, 1);
+        dup2(stderr, 2);
+
+        
         execvp(args[0], args);
+
 	perror("exec");
 	exit(-1);
       } else if (pid > 0) { /* this is the parent process */
